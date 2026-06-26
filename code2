@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Console Push Universelle</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; max-width: 650px; margin: 30px auto; padding: 20px; background-color: #f8f9fa; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 14px; }
+        input, textarea { width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; box-sizing: border-box; }
+        button { background-color: #3ecf8e; color: white; border: none; padding: 14px 20px; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; }
+        button:hover { background-color: #2eaf73; }
+        .step { padding: 8px 12px; border-radius: 6px; background: #f1f3f5; font-size: 14px; margin-bottom: 10px; }
+        .step-loading { background: #e8f4fd; color: #007bff; }
+        .step-success { background: #d4edda; color: #155724; }
+        .step-error { background: #f8d7da; color: #721c24; font-weight: bold; }
+        .error-details { display: none; margin-top: 15px; background: #1e1e1e; color: #ff5252; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 12px; white-space: pre-wrap; }
+    </style>
+</head>
+<body>
+
+<div class="card" style="background: #fff3cd; border: 1px solid #ffeeba; color: #856404;">
+    <div class="form-group">
+        <label for="inputKey">🔑 Ma clé Supabase Anon :</label>
+        <input type="password" id="inputKey" placeholder="Colle ta clé eyJhbGciOi...">
+    </div>
+</div>
+
+<div class="card">
+    <h2>Envoyer un Push (Mode Normal) 🚀</h2>
+    <div class="form-group">
+        <label for="title">Titre :</label>
+        <input type="text" id="title" value="Notification Spéciale">
+    </div>
+    <div class="form-group">
+        <label for="body">Message :</label>
+        <textarea id="body" rows="3">Ça marche sur n'importe quel navigateur !</textarea>
+    </div>
+    <button id="sendBtn">Lancer l'envoi</button>
+</div>
+
+<div class="card">
+    <div id="stepSupabase" class="step">⏳ En attente...</div>
+    <div id="stepPush" class="step">⏳ En attente...</div>
+    <div id="errorDetails" class="error-details"></div>
+</div>
+
+<script>
+    const urlBase = "https://cuafiktkwtikpswtvokj.supabase.co/rest/v1/tokens?select=tokens";
+    
+    // ⚠️ REMPLACE CETTE URL PAR CELLE DE TA WORKER CLOUDFLARE 
+    const PROXY_WORKER_URL = "https://expo-push-proxy.ton-nom.workers.dev";
+
+    const sendBtn = document.getElementById('sendBtn');
+    const inputKey = document.getElementById('inputKey');
+    const stepSupabase = document.getElementById('stepSupabase');
+    const stepPush = document.getElementById('stepPush');
+    const errorDetails = document.getElementById('errorDetails');
+
+    if (localStorage.getItem('supabase_key')) {
+        inputKey.value = localStorage.getItem('supabase_key');
+    }
+    inputKey.addEventListener('input', () => {
+        localStorage.setItem('supabase_key', inputKey.value);
+    });
+
+    function updateStep(element, text, statusClass) {
+        element.className = `step ${statusClass}`;
+        element.innerText = text;
+    }
+
+    sendBtn.addEventListener('click', async () => {
+        const apiKey = inputKey.value.trim();
+        if (!apiKey) {
+            updateStep(stepSupabase, "❌ Erreur : Clé manquante !", "step-error");
+            return;
+        }
+
+        errorDetails.style.display = "none";
+        updateStep(stepSupabase, "🔄 Récupération Supabase...", "step-loading");
+        updateStep(stepPush, "⏳ En attente...", "");
+
+        let tokens = [];
+
+        try {
+            // 1. Récupération Supabase (Fonctionne en mode normal nativement)
+            const resSupabase = await fetch(urlBase, {
+                method: "GET",
+                headers: { "apikey": apiKey, "Authorization": `Bearer ${apiKey}` }
+            });
+
+            if (!resSupabase.ok) throw new Error(`Supabase error: ${resSupabase.status}`);
+            const data = await resSupabase.json();
+
+            if (!data || data.length === 0) {
+                updateStep(stepSupabase, "⚠️ Table vide.", "step-error");
+                return;
+            }
+
+            tokens = data.map(row => row.tokens).filter(t => t);
+            updateStep(stepSupabase, `✅ ${tokens.length} token(s) récupéré(s) !`, "step-success");
+
+            // 2. Envoi via la Cloudflare Worker (Fait sauter le blocage CORS du navigateur normal)
+            updateStep(stepPush, "🔄 Envoi à Expo via la Worker sécurisée...", "step-loading");
+
+            const messages = tokens.map(token => ({
+                to: token,
+                sound: 'default',
+                title: document.getElementById('title').value,
+                body: document.getElementById('body').value,
+            }));
+
+            const resPush = await fetch(PROXY_WORKER_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(messages),
+            });
+
+            const pushResult = await resPush.json();
+
+            if (resPush.ok) {
+                updateStep(stepPush, "✅ Notification envoyée avec succès sur tous les téléphones !", "step-success");
+            } else {
+                updateStep(stepPush, "❌ Refusé par le serveur.", "step-error");
+                errorDetails.style.display = "block";
+                errorDetails.innerText = JSON.stringify(pushResult, null, 2);
+            }
+
+        } catch (err) {
+            updateStep(stepPush, "💥 Erreur réseau ou de script.", "step-error");
+            errorDetails.style.display = "block";
+            errorDetails.innerText = err.message;
+        }
+    });
+</script>
+
+</body>
+</html>
