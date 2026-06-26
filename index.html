@@ -1,512 +1,135 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Admin Notifications Shimo</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #f0f2f5;
-      padding: 20px;
-      color: #1a1a2e;
-    }
-    .container { max-width: 700px; margin: 0 auto; }
-    h1 {
-      text-align: center;
-      font-size: 1.5rem;
-      margin-bottom: 6px;
-    }
-    .subtitle {
-      text-align: center;
-      color: #666;
-      font-size: 0.85rem;
-      margin-bottom: 20px;
-    }
-    .card {
-      background: #fff;
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 16px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    }
-    .card h2 {
-      font-size: 1rem;
-      margin-bottom: 12px;
-      color: #16213e;
-    }
-    label {
-      display: block;
-      font-size: 0.85rem;
-      font-weight: 600;
-      margin-bottom: 4px;
-      color: #444;
-    }
-    input, textarea, select {
-      width: 100%;
-      padding: 10px 12px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      margin-bottom: 12px;
-      font-family: inherit;
-    }
-    textarea { resize: vertical; min-height: 80px; }
-    input:focus, textarea:focus, select:focus {
-      outline: none;
-      border-color: #00A8FC;
-      box-shadow: 0 0 0 3px rgba(0,168,252,0.15);
-    }
-    .row { display: flex; gap: 12px; }
-    .row > * { flex: 1; }
-    .stat-box {
-      background: #f8f9fa;
-      border-radius: 8px;
-      padding: 12px;
-      text-align: center;
-    }
-    .stat-box .number {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: #00A8FC;
-    }
-    .stat-box .label {
-      font-size: 0.75rem;
-      color: #888;
-      margin-top: 2px;
-    }
-    button {
-      width: 100%;
-      padding: 12px;
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-    .btn-primary {
-      background: #00A8FC;
-      color: #fff;
-    }
-    .btn-primary:hover { background: #0095e0; }
-    .btn-primary:disabled {
-      background: #ccc;
-      cursor: not-allowed;
-    }
-    .btn-secondary {
-      background: #e9ecef;
-      color: #444;
-      margin-top: 8px;
-      font-size: 0.85rem;
-    }
-    .btn-secondary:hover { background: #dee2e6; }
-    .btn-danger {
-      background: #dc3545;
-      color: #fff;
-      margin-top: 8px;
-      font-size: 0.85rem;
-    }
-    .btn-danger:hover { background: #c82333; }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Console Envoi Direct Expo</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 650px; margin: 30px auto; padding: 20px; background-color: #f8f9fa; color: #333; }
+        .card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 6px; font-weight: bold; font-size: 14px; }
+        input, textarea { width: 100%; padding: 10px; border: 1px solid #ced4da; border-radius: 6px; box-sizing: border-box; }
+        button { background-color: #3ecf8e; color: white; border: none; padding: 14px 20px; border-radius: 6px; cursor: pointer; font-size: 16px; font-weight: bold; width: 100%; transition: background 0.2s; }
+        button:hover { background-color: #2eaf73; }
+        
+        .diagnostic-box { background: #ffffff; padding: 20px; border-radius: 12px; border: 1px solid #e9ecef; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .diagnostic-title { font-weight: bold; margin-bottom: 15px; font-size: 16px; }
+        
+        .step { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding: 8px 12px; border-radius: 6px; background: #f1f3f5; font-size: 14px; }
+        .step-waiting { background: #f1f3f5; color: #6c757d; }
+        .step-loading { background: #e8f4fd; color: #007bff; font-weight: 500; }
+        .step-success { background: #d4edda; color: #155724; font-weight: 500; }
+        .step-error { background: #f8d7da; color: #721c24; font-weight: bold; }
 
-    .progress-bar {
-      width: 100%;
-      height: 8px;
-      background: #e9ecef;
-      border-radius: 4px;
-      overflow: hidden;
-      margin: 12px 0;
-    }
-    .progress-bar .fill {
-      height: 100%;
-      background: #00A8FC;
-      border-radius: 4px;
-      transition: width 0.3s;
-      width: 0%;
-    }
-    .progress-text {
-      text-align: center;
-      font-size: 0.85rem;
-      color: #666;
-      margin-bottom: 4px;
-    }
-    .log {
-      background: #1a1a2e;
-      color: #e0e0e0;
-      font-family: "SF Mono", "Fira Code", monospace;
-      font-size: 0.75rem;
-      padding: 12px;
-      border-radius: 8px;
-      max-height: 250px;
-      overflow-y: auto;
-      white-space: pre-wrap;
-      word-break: break-all;
-    }
-    .log .success { color: #57F287; }
-    .log .error { color: #ED4245; }
-    .log .info { color: #00A8FC; }
-    .log .warn { color: #FEE75C; }
-    .hidden { display: none; }
-    .chip {
-      display: inline-block;
-      background: #e9ecef;
-      border-radius: 12px;
-      padding: 2px 10px;
-      font-size: 0.75rem;
-      margin: 2px;
-    }
-    #tokensList {
-      max-height: 120px;
-      overflow-y: auto;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px;
-      padding: 4px;
-    }
-    .badge {
-      display: inline-block;
-      background: #00A8FC;
-      color: #fff;
-      border-radius: 10px;
-      padding: 1px 8px;
-      font-size: 0.7rem;
-      margin-left: 6px;
-    }
-    .tabs {
-      display: flex;
-      gap: 0;
-      margin-bottom: 16px;
-      background: #e9ecef;
-      border-radius: 8px;
-      overflow: hidden;
-    }
-    .tab {
-      flex: 1;
-      padding: 10px;
-      text-align: center;
-      cursor: pointer;
-      font-size: 0.85rem;
-      font-weight: 600;
-      border: none;
-      background: transparent;
-      transition: all 0.2s;
-    }
-    .tab.active {
-      background: #fff;
-      color: #00A8FC;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-    }
-  </style>
+        .error-details { display: none; margin-top: 15px; background: #1e1e1e; color: #ff5252; padding: 12px; border-radius: 6px; font-family: monospace; font-size: 12px; overflow-x: auto; white-space: pre-wrap; }
+    </style>
 </head>
 <body>
-  <div class="container">
-    <h1>📨 Admin Notifications Shimo</h1>
-    <p class="subtitle">Envoie des notifications push via Expo Push API</p>
 
-    <!-- Stats -->
-    <div class="card">
-      <div class="row">
-        <div class="stat-box">
-          <div class="number" id="totalTokens">-</div>
-          <div class="label">Tokens enregistrés</div>
-        </div>
-        <div class="stat-box">
-          <div class="number" id="batchCount">-</div>
-          <div class="label">Lots de 50</div>
-        </div>
-        <div class="stat-box">
-          <div class="number" id="sentCount">-</div>
-          <div class="label">Envoyés</div>
-        </div>
-      </div>
+<div class="card">
+    <h2>Envoyer un Push Direct 🚀</h2>
+    
+    <div class="form-group">
+        <label for="title">Titre :</label>
+        <input type="text" id="title" value="Notification Spéciale">
     </div>
 
-    <!-- Tabs -->
-    <div class="tabs">
-      <button class="tab active" data-tab="compose" onclick="switchTab('compose')">✉️ Composer</button>
-      <button class="tab" data-tab="tokens" onclick="switchTab('tokens')">🔑 Tokens</button>
-      <button class="tab" data-tab="logs" onclick="switchTab('logs')">📋 Logs</button>
+    <div class="form-group">
+        <label for="body">Message :</label>
+        <textarea id="body" rows="3">Test direct sans proxy.</textarea>
     </div>
 
-    <!-- Tab Compose -->
-    <div id="tab-compose" class="tab-content">
-      <div class="card">
-        <h2>🖊️ Composer la notification</h2>
+    <button id="sendBtn">Lancer l'envoi direct</button>
+</div>
 
-        <label>Titre</label>
-        <input type="text" id="notifTitle" placeholder="Ex : Nouveau tournoi !" value="Shimo" />
+<div class="diagnostic-box">
+    <div class="diagnostic-title">📊 Statut de l'opération en direct :</div>
+    
+    <div id="stepSupabase" class="step step-waiting">⏳ En attente...</div>
+    <div id="stepPush" class="step step-waiting">⏳ En attente...</div>
 
-        <label>Message</label>
-        <textarea id="notifBody" placeholder="Ex : Un nouveau tournoi vient d'être ajouté !">Nouvelle notification de l'app Shimo</textarea>
+    <div id="errorDetails" class="error-details"></div>
+</div>
 
-        <div class="row">
-          <div>
-            <label>Son</label>
-            <select id="notifSound">
-              <option value="default">Par défaut</option>
-              <option value="none">Silencieux</option>
-            </select>
-          </div>
-          <div>
-            <label>Priorité</label>
-            <select id="notifPriority">
-              <option value="default">Normale</option>
-              <option value="high">Haute</option>
-            </select>
-          </div>
-        </div>
+<script>
+    const urlBase = "https://cuafiktkwtikpswtvokj.supabase.co/rest/v1/tokens?select=tokens";
+    const apiKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN1YWZpa3Rrd3Rpa3Bzd3R2b2tqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0ODQwNTUsImV4cCI6MjA5ODA2MDA1NX0.003ygeiEvYH-oMnrfCCP9h5VKgBZ4BazBETmW3-ieOA";
 
-        <label>Données (JSON, optionnel)</label>
-        <textarea id="notifData" placeholder='{"screen": "tournois", "id": "123"}'></textarea>
+    const sendBtn = document.getElementById('sendBtn');
+    const stepSupabase = document.getElementById('stepSupabase');
+    const stepPush = document.getElementById('stepPush');
+    const errorDetails = document.getElementById('errorDetails');
 
-        <button class="btn-primary" id="sendBtn" onclick="sendNotifications()">
-          📤 Envoyer à tous les tokens
-        </button>
-      </div>
-    </div>
-
-    <!-- Tab Tokens -->
-    <div id="tab-tokens" class="tab-content hidden">
-      <div class="card">
-        <h2>🔑 Tokens enregistrés</h2>
-        <div id="tokensList">
-          <span style="color:#999">Chargement...</span>
-        </div>
-        <button class="btn-secondary" onclick="loadTokens()">🔄 Recharger</button>
-      </div>
-    </div>
-
-    <!-- Tab Logs -->
-    <div id="tab-logs" class="tab-content hidden">
-      <div class="card">
-        <h2>📋 Journal d'envoi</h2>
-        <div class="progress-bar" id="progressBar">
-          <div class="fill" id="progressFill"></div>
-        </div>
-        <div class="progress-text" id="progressText">Prêt</div>
-        <div class="log" id="logContainer">Cliquez sur "Envoyer" pour commencer.</div>
-        <button class="btn-secondary" onclick="clearLogs()">🗑️ Effacer</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // === CONFIG ===
-    const SUPABASE_URL = "https://cuafiktkwtikpswtvokj.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN1YWZpa3Rrd3Rpa3Bzd3R2b2tqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0ODQwNTUsImV4cCI6MjA5ODA2MDA1NX0.003ygeiEvYH-oMnrfCCP9h5VKgBZ4BazBETmW3-ieOA";
-    const BATCH_SIZE = 50;
-
-    let allTokens = [];
-    let isSending = false;
-    let aborted = false;
-
-    // === SUPABASE ===
-    async function supabaseFetch(path) {
-      const res = await fetch(`${SUPABASE_URL}${path}`, {
-        headers: {
-          "apikey": SUPABASE_ANON_KEY,
-          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-        },
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
-      return res.json();
+    function updateStep(element, text, statusClass) {
+        element.className = `step ${statusClass}`;
+        element.innerText = text;
     }
 
-    async function supabasePost(path, body) {
-      const res = await fetch(`${SUPABASE_URL}${path}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "apikey": SUPABASE_ANON_KEY,
-          "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
-          "Prefer": "return=minimal",
-        },
-        body: JSON.stringify(body),
-      });
-      if (!res.ok && res.status !== 201) throw new Error(`HTTP ${res.status} ${res.statusText}`);
-      return res;
-    }
+    sendBtn.addEventListener('click', async () => {
+        errorDetails.style.display = "none";
+        errorDetails.innerText = "";
+        updateStep(stepSupabase, "🔄 Récupération Supabase...", "step-loading");
+        updateStep(stepPush, "⏳ En attente...", "step-waiting");
 
-    // === TOKENS ===
-    async function loadTokens() {
-      try {
-        log("info", "Chargement des tokens depuis Supabase...");
-        const data = await supabaseFetch("/rest/v1/tokens?select=*&order=created_at.desc");
-        allTokens = data || [];
-        updateStats();
-        renderTokens();
-        log("success", `${allTokens.length} token(s) chargé(s)`);
-      } catch (err) {
-        log("error", `Erreur chargement tokens : ${err.message}`);
-      }
-    }
-
-    function updateStats() {
-      document.getElementById("totalTokens").textContent = allTokens.length;
-      document.getElementById("batchCount").textContent = Math.ceil(allTokens.length / BATCH_SIZE);
-      document.getElementById("sentCount").textContent = "0";
-    }
-
-    function renderTokens() {
-      const container = document.getElementById("tokensList");
-      if (allTokens.length === 0) {
-        container.innerHTML = '<span style="color:#999">Aucun token enregistré.</span>';
-        return;
-      }
-      container.innerHTML = allTokens.map(t => {
-        const short = t.token ? t.token.substring(0, 20) + "..." : "?";
-        const name = t.username || "Anonyme";
-        return `<span class="chip" title="${t.token || ''}">${name}: ${short}</span>`;
-      }).join("");
-    }
-
-    // === NOTIFICATIONS ===
-    async function sendNotifications() {
-      if (isSending) {
-        if (confirm("Envoi en cours. Voulez-vous annuler ?")) {
-          aborted = true;
-        }
-        return;
-      }
-
-      if (allTokens.length === 0) {
-        log("error", "Aucun token. Rechargez d'abord les tokens.");
-        return;
-      }
-
-      const title = document.getElementById("notifTitle").value.trim();
-      const body = document.getElementById("notifBody").value.trim();
-      const sound = document.getElementById("notifSound").value;
-      const priority = document.getElementById("notifPriority").value;
-      const dataRaw = document.getElementById("notifData").value.trim();
-
-      if (!title || !body) {
-        log("error", "Le titre et le message sont requis.");
-        return;
-      }
-
-      let data = {};
-      if (dataRaw) {
-        try { data = JSON.parse(dataRaw); }
-        catch { log("error", "Les données JSON sont invalides."); return; }
-      }
-
-      isSending = true;
-      aborted = false;
-      document.getElementById("sendBtn").textContent = "⏳ Envoi en cours...";
-      document.getElementById("sendBtn").disabled = true;
-      document.getElementById("sentCount").textContent = "0";
-      document.getElementById("progressFill").style.width = "0%";
-
-      const tokens = allTokens.map(t => t.token).filter(Boolean);
-      const batches = [];
-      for (let i = 0; i < tokens.length; i += BATCH_SIZE) {
-        batches.push(tokens.slice(i, i + BATCH_SIZE));
-      }
-
-      log("info", `Envoi de ${tokens.length} notification(s) en ${batches.length} lot(s)...`);
-      let successCount = 0;
-      let failCount = 0;
-
-      for (let i = 0; i < batches.length; i++) {
-        if (aborted) {
-          log("warn", "Envoi annulé par l'utilisateur.");
-          break;
-        }
-
-        const batch = batches[i];
-        const messages = batch.map(token => ({
-          to: token,
-          sound,
-          title,
-          body,
-          priority: priority === "high" ? "high" : "default",
-          ...(Object.keys(data).length > 0 ? { data } : {}),
-        }));
-
-        log("info", `Lot ${i + 1}/${batches.length} (${batch.length} notification(s))...`);
+        let tokens = [];
 
         try {
-          const res = await fetch("https://exp.host/--/api/v2/push/send", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              "Accept": "application/json",
-            },
-            body: JSON.stringify(messages),
-          });
-
-          const result = await res.json();
-
-          if (result.data) {
-            const ok = result.data.filter(d => d.status === "ok").length;
-            const err = result.data.filter(d => d.status === "error").length;
-            successCount += ok;
-            failCount += err;
-            log("success", `Lot ${i + 1}: ${ok} envoyée(s), ${err} erreur(s)`);
-
-            // Affiche les erreurs individuelles
-            result.data.forEach((d, idx) => {
-              if (d.status === "error" && d.message) {
-                log("error", `  → Token ${batch[idx].substring(0, 20)}...: ${d.message}`);
-              }
+            // 1. Supabase
+            const resSupabase = await fetch(urlBase, {
+                method: "GET",
+                headers: {
+                    "apikey": apiKey,
+                    "Authorization": `Bearer ${apiKey}`
+                }
             });
-          } else {
-            failCount += batch.length;
-            log("error", `Lot ${i + 1}: échec - ${result.errors?.[0]?.message || "inconnu"}`);
-          }
+
+            if (!resSupabase.ok) throw new Error(`Supabase error: ${resSupabase.status}`);
+            const data = await resSupabase.json();
+
+            if (!data || data.length === 0) {
+                updateStep(stepSupabase, "⚠️ Table vide.", "step-error");
+                return;
+            }
+
+            tokens = data.map(row => row.tokens).filter(t => t);
+            updateStep(stepSupabase, `✅ ${tokens.length} token(s) récupéré(s) !`, "step-success");
+
+            // 2. Expo Direct (Fonctionne uniquement grâce à l'étape 1)
+            updateStep(stepPush, "🔄 Envoi direct vers Expo (Sans proxy)...", "step-loading");
+
+            const messages = tokens.map(token => ({
+                to: token,
+                sound: 'default',
+                title: document.getElementById('title').value,
+                body: document.getElementById('body').value,
+            }));
+
+            const resPush = await fetch('https://exp.host/--/api/v2/push/send', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(messages),
+            });
+
+            const pushResult = await resPush.json();
+
+            if (resPush.ok) {
+                updateStep(stepPush, "✅ Push envoyé avec succès !", "step-success");
+            } else {
+                updateStep(stepPush, "❌ Refusé par Expo.", "step-error");
+                errorDetails.style.display = "block";
+                errorDetails.innerText = JSON.stringify(pushResult, null, 2);
+            }
+
         } catch (err) {
-          failCount += batch.length;
-          log("error", `Lot ${i + 1}: erreur réseau - ${err.message}`);
+            updateStep(stepPush, "💥 Erreur d'envoi.", "step-error");
+            errorDetails.style.display = "block";
+            errorDetails.innerText = err.message || JSON.stringify(err);
         }
+    });
+</script>
 
-        const pct = Math.round(((i + 1) / batches.length) * 100);
-        document.getElementById("progressFill").style.width = `${pct}%`;
-        document.getElementById("sentCount").textContent = successCount + failCount;
-        document.getElementById("progressText").textContent =
-          `${successCount} succès, ${failCount} échecs (lot ${i + 1}/${batches.length})`;
-
-        // Pause entre les lots pour éviter le rate limiting
-        if (i < batches.length - 1 && !aborted) {
-          await new Promise(r => setTimeout(r, 1000));
-        }
-      }
-
-      isSending = false;
-      document.getElementById("sendBtn").textContent = "📤 Envoyer à tous les tokens";
-      document.getElementById("sendBtn").disabled = false;
-
-      if (!aborted) {
-        log("success", `✅ Envoi terminé : ${successCount} succès, ${failCount} échecs`);
-      }
-    }
-
-    // === LOGS ===
-    function log(type, message) {
-      const container = document.getElementById("logContainer");
-      const time = new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-      const cls = type === "success" ? "success" : type === "error" ? "error" : type === "warn" ? "warn" : "info";
-      container.innerHTML += `[${time}] <span class="${cls}">${message}</span>\n`;
-      container.scrollTop = container.scrollHeight;
-    }
-
-    function clearLogs() {
-      document.getElementById("logContainer").innerHTML = "Logs effacés.\n";
-      document.getElementById("progressFill").style.width = "0%";
-      document.getElementById("progressText").textContent = "Prêt";
-    }
-
-    // === TABS ===
-    function switchTab(tab) {
-      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
-      document.querySelectorAll(".tab-content").forEach(t => t.classList.add("hidden"));
-      document.querySelector(`.tab[data-tab="${tab}"]`).classList.add("active");
-      document.getElementById(`tab-${tab}`).classList.remove("hidden");
-    }
-
-    // === INIT ===
-    loadTokens();
-  </script>
 </body>
 </html>
