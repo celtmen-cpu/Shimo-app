@@ -35,7 +35,7 @@
 </div>
 
 <div class="card">
-    <h2>Envoyer un Push Général 🚀</h2>
+    <h2>Envoyer une notification</h2>
     
     <div class="form-group">
         <label for="title">Titre :</label>
@@ -47,14 +47,14 @@
         <textarea id="body" rows="3">Celtmen est arrivé!!!.</textarea>
     </div>
 
-    <button id="sendBtn">Lancer l'envoi</button>
+    <button id="sendBtn">Lancer la notif</button>
 </div>
 
 <div class="diagnostic-box">
-    <div class="diagnostic-title">📊 Statut de l'opération en direct :</div>
+    <div class="diagnostic-title"> Progression :</div>
     
-    <div id="stepSupabase" class="step step-waiting">⏳ En attente...</div>
-    <div id="stepPush" class="step step-waiting">⏳ En attente...</div>
+    <div id="stepSupabase" class="step step-waiting">En attente...</div>
+    <div id="stepPush" class="step step-waiting">En attente...</div>
 
     <div id="errorDetails" class="error-details"></div>
 </div>
@@ -94,7 +94,7 @@
         errorDetails.style.display = "none";
         errorDetails.innerText = "";
         updateStep(stepSupabase, "🔄 Récupération Supabase...", "step-loading");
-        updateStep(stepPush, "⏳ En attente...", "step-waiting");
+        updateStep(stepPush, "En attente...", "step-waiting");
 
         let tokens = [];
 
@@ -120,7 +120,7 @@
             updateStep(stepSupabase, `✅ ${tokens.length} token(s) récupéré(s) !`, "step-success");
 
             // 2. Envoi via TA Worker Cloudflare (Fait sauter le CORS en mode normal)
-            updateStep(stepPush, "🔄 Envoi à Expo via ta Cloudflare Worker...", "step-loading");
+            updateStep(stepPush, "🔄 Envoi à Expo via Cloudflare Worker...", "step-loading");
 
             const messages = tokens.map(token => ({
                 to: token,
@@ -140,7 +140,7 @@
             const pushResult = await resPush.json();
 
             if (resPush.ok) {
-                updateStep(stepPush, "✅ Push envoyé avec succès via ta Worker !", "step-success");
+                updateStep(stepPush, "✅ Notif envoyé !", "step-success");
             } else {
                 updateStep(stepPush, "❌ Refusé par le serveur.", "step-error");
                 errorDetails.style.display = "block";
